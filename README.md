@@ -17,5 +17,5 @@
 ---
 
 ## نصب سریع روی VPS
-
+```bash
 bash <(curl -sL https://raw.githubusercontent.com/tdk121212/anytls/main/install.sh)
