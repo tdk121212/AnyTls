@@ -2,38 +2,38 @@
 
 set -e
 
-# بررسی و نصب unzip در صورت نیاز
+# Install unzip if not installed
 if ! command -v unzip &> /dev/null; then
-    echo "نصب unzip..."
+    echo "Installing unzip..."
     sudo apt update
     sudo apt install -y unzip
 fi
 
-# دریافت پورت و پسورد از کاربر
-read -p "لطفاً پورت مورد نظر را وارد کنید (مثلاً 443): " PORT
-read -s -p "لطفاً پسورد را وارد کنید: " PASSWORD
-echo ""
+# Read port and password from user
+read -p "Enter port (e.g. 443): " PORT
+read -p "Enter password: " PASSWORD
 
-# تعریف متغیرها
-VERSION="v0.0.8"
-REPO="anytls/anytls-go"
-ASSET_NAME="anytls-go-linux-amd64.zip"
-DOWNLOAD_URL="https://github.com/$REPO/releases/download/$VERSION/$ASSET_NAME"
+# Variables
+VERSION="0.0.8"
+DOWNLOAD_URL="https://github.com/anytls/anytls-go/releases/download/v$VERSION/anytls_0.0.8_linux_amd64.zip"
 INSTALL_DIR="/opt/anytls-go"
-BINARY_PATH="$INSTALL_DIR/anytls-go"
+BINARY_NAME="anytls-go"
+ZIP_NAME="anytls.zip"
 
-# ایجاد مسیر نصب
+# Create install directory
 sudo mkdir -p "$INSTALL_DIR"
 cd "$INSTALL_DIR"
 
-# دانلود و استخراج فایل
-echo "دانلود برنامه از $DOWNLOAD_URL ..."
-curl -L "$DOWNLOAD_URL" -o "$ASSET_NAME"
-unzip -o "$ASSET_NAME"
-rm "$ASSET_NAME"
-sudo chmod +x anytls-go
+# Download and unzip
+echo "Downloading anytls-go..."
+curl -L "$DOWNLOAD_URL" -o "$ZIP_NAME"
+unzip -o "$ZIP_NAME"
+rm "$ZIP_NAME"
 
-# ایجاد فایل سرویس systemd
+# Make binary executable (if needed)
+chmod +x $BINARY_NAME
+
+# Create systemd service
 SERVICE_FILE="/etc/systemd/system/anytls-go.service"
 sudo bash -c "cat > $SERVICE_FILE" <<EOF
 [Unit]
@@ -41,7 +41,7 @@ Description=AnyTLS-Go Service
 After=network.target
 
 [Service]
-ExecStart=$BINARY_PATH -port $PORT -password $PASSWORD
+ExecStart=$INSTALL_DIR/$BINARY_NAME -port $PORT -password $PASSWORD
 Restart=always
 User=root
 
@@ -49,9 +49,9 @@ User=root
 WantedBy=multi-user.target
 EOF
 
-# فعال‌سازی و راه‌اندازی سرویس
+# Enable and start service
 sudo systemctl daemon-reload
 sudo systemctl enable anytls-go.service
 sudo systemctl start anytls-go.service
 
-echo "نصب و راه‌اندازی anytls-go با موفقیت انجام شد."
+echo "anytls-go installed and started successfully."
