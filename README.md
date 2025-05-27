@@ -18,6 +18,4 @@
 
 ## نصب سریع روی VPS
 
-1. وارد سرور شوید:
-   ```bash
-   ssh your_user@your_vps_ip
+bash <(curl -sL https://raw.githubusercontent.com/tdk121212/anytls/main/install.sh)
