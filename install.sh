@@ -2,6 +2,33 @@
 
 set -e
 
+SERVICE_NAME="anytls-go"
+INSTALL_DIR="/opt/anytls-go"
+SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME.service"
+BINARY_NAME="anytls-server"
+
+# Uninstall mode
+if [[ "$1" == "--uninstall" ]]; then
+    echo "Uninstalling $SERVICE_NAME..."
+
+    # Stop and disable the service if it exists
+    if systemctl list-units --full -all | grep -Fq "$SERVICE_NAME.service"; then
+        sudo systemctl stop "$SERVICE_NAME.service" || true
+        sudo systemctl disable "$SERVICE_NAME.service" || true
+        sudo rm -f "$SERVICE_FILE"
+    fi
+
+    # Remove application directory
+    if [ -d "$INSTALL_DIR" ]; then
+        sudo rm -rf "$INSTALL_DIR"
+    fi
+
+    sudo systemctl daemon-reload
+    echo "$SERVICE_NAME has been uninstalled."
+    exit 0
+fi
+
+# Install mode
 # Install unzip if not installed
 if ! command -v unzip &> /dev/null; then
     echo "Installing unzip..."
@@ -16,8 +43,6 @@ read -p "Enter password: " PASSWORD
 # Variables
 VERSION="0.0.8"
 DOWNLOAD_URL="https://github.com/anytls/anytls-go/releases/download/v$VERSION/anytls_0.0.8_linux_amd64.zip"
-INSTALL_DIR="/opt/anytls-go"
-BINARY_NAME="anytls-server"
 ZIP_NAME="anytls.zip"
 
 # Create install directory
@@ -31,10 +56,9 @@ unzip -o "$ZIP_NAME"
 rm "$ZIP_NAME"
 
 # Make binary executable
-chmod +x $BINARY_NAME
+chmod +x "$BINARY_NAME"
 
 # Create systemd service
-SERVICE_FILE="/etc/systemd/system/anytls-go.service"
 sudo bash -c "cat > $SERVICE_FILE" <<EOF
 [Unit]
 Description=AnyTLS-Go Server
@@ -51,7 +75,7 @@ EOF
 
 # Enable and start service
 sudo systemctl daemon-reload
-sudo systemctl enable anytls-go.service
-sudo systemctl start anytls-go.service
+sudo systemctl enable "$SERVICE_NAME.service"
+sudo systemctl start "$SERVICE_NAME.service"
 
 echo "anytls-server installed and started successfully."
